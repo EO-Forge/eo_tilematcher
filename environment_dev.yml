@@ -1,0 +1,10 @@
+name: eo-tilematcher
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - matplotlib
+  - geopandas
+  - pygeos
+  - pytest
+  - black
