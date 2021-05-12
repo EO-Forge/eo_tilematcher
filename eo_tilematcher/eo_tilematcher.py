@@ -1,9 +1,21 @@
-import numpy as np
 import os
 import pickle
+import numpy as np
 import pygeos
 from pathlib import Path
+import argparse
 
+#
+parser=argparse.ArgumentParser(description= "EO-tilematcher")
+# mandatory
+parser.add_argument("roi",type=str,help="ROI WKT (currently only wkt is supported)")
+#optional
+parser.add_argument('--spacecraft',type=str,help= "satellite (landsat5,landsat8,sentinel2)",default="sentinel2")
+parser.add_argument('--op',type=str,help= "match task (intersection,contains)",default="intersection")
+parser.add_argument("--dump",help="To dump results (if any) to file",action="store_true")
+parser.add_argument("--dump_full",help="To dump just tiles to dump also geoms",action="store_true")
+parser.add_argument("--dump_file",type=str,help="To leave dump results path (default current dir)",default="./test.txt")
+#
 
 def _db_loader(file_name):
     tiles_db = dict()
@@ -59,3 +71,28 @@ def intersects(spacecraft, roi):
     selected_db = get_spacecraft_db(spacecraft)
     matches = pygeos.predicates.intersects(selected_db["geometry"], roi)
     return selected_db["tile"][matches], selected_db["geometry"][matches]
+
+def write_tiles_geoms(tiles,geoms=None,file_dump='./test.txt'):
+       
+    if geoms is None:
+        with open(file_dump,'w+') as f:
+            for t in tiles:
+                f.write('{} \n'.format(t))
+    else:
+        with open(file_dump,'w+') as f:
+            for t,g in zip(tiles,geoms):
+                f.write('{} , {}\n'.format(t,g))
+
+
+if __name__ == '__main__':
+    m,_=parser.parse_known_args()
+    box=pygeos.io.from_wkt(m.roi)
+    if m.op =='intersection':
+        tiles,geoms=intersects(m.spacecraft,box)
+    print(tiles)
+    if m.dump:
+        if len(tiles)>0:
+            if not m.dump_full:
+                write_tiles_geoms(tiles,None,m.dump_file)
+            else:
+                write_tiles_geoms(tiles,geoms,m.dump_file)
