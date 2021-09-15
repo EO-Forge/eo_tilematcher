@@ -52,6 +52,7 @@ docs/_build/
 
 # pyenv
 .python-version
+.pyenv
 
 # dotenv
 .env
@@ -64,3 +65,6 @@ ENV/
 # IDE settings
 .vscode/
 .idea
+
+# misc scripts
+make_pyenv.sh

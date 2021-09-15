@@ -1,31 +1,42 @@
 import os
-import pickle
-import numpy as np
-import pygeos
 from pathlib import Path
 import argparse
+import pandas as pd
+import geopandas as gpd
 
-#
-parser=argparse.ArgumentParser(description= "EO-tilematcher")
+
+####
+parser = argparse.ArgumentParser(description="EO-tilematcher")
 # mandatory
-parser.add_argument("roi",type=str,help="ROI WKT (currently only wkt is supported)")
-#optional
-parser.add_argument('--spacecraft',type=str,help= "satellite (landsat5,landsat8,sentinel2)",default="sentinel2")
-parser.add_argument('--op',type=str,help= "match task (intersection,contains)",default="intersection")
-parser.add_argument("--dump",help="To dump results (if any) to file",action="store_true")
-parser.add_argument("--dump_full",help="To dump just tiles to dump also geoms",action="store_true")
-parser.add_argument("--dump_file",type=str,help="To leave dump results path (default current dir)",default="./test.txt")
+parser.add_argument(
+    "roi", type=str, help="ROI FILE (any file that fiona/geopandas could open)"
+)
+# optional
+parser.add_argument(
+    "--spacecraft",
+    type=str,
+    help="satellite (landsat5,landsat8,sentinel2)",
+    default="sentinel2",
+)
+parser.add_argument(
+    "--verbose", help="To display results (if any)", action="store_true"
+)
+parser.add_argument(
+    "--dump", help="To dump results (if any) to file", action="store_true"
+)
+parser.add_argument(
+    "--dump_file",
+    type=str,
+    help="To leave dump results path (default current dir)",
+    default="./geom_match.gpkg",
+)
 #
+
 
 def _db_loader(file_name):
-    tiles_db = dict()
     data_dir = Path(__file__).parent
     subdir = file_name.split("_")[0]
-    tmp = pickle.load(open(os.path.join(data_dir, "./data", subdir, file_name), "rb"))
-    tiles_db["geometry"] = pygeos.creation.polygons(
-        [pygeos.creation.linearrings(pol) for _, pol in tmp]
-    ).squeeze()
-    tiles_db["tile"] = np.array([tile for tile, _ in tmp])
+    tiles_db = pd.read_pickle(os.path.join(data_dir, "./data", subdir, file_name))
     return tiles_db
 
 
@@ -63,36 +74,119 @@ def get_spacecraft_db(spacecraft):
     return SPACECRAFTS_DB[spacecraft]
 
 
-def intersects(spacecraft, roi):
+def get_contains_intersect_on_tiles(gpd_to_match, gpd_tiles, gpd_tiles_col):
+    """get if contains or intersects (but not contains) shape on sat tiles
+    Parameters
+    ----------
+        gpd_to_match: geodataframe
+            roi to be intersected by tiles
+        gpd_tiles: geodataframe
+            geodataframe of sat tiles or path#rows
+        gpd_tiles_col: str
+            tiles/pathrow column on gpd_tiles
+
+    Returns
+    -------
+        geodataframe that matches shapes to tiles (either contains or
+        intersects)
+    """
+    contains_ = []
+    intersects_ = []
+    tile_name_out = gpd_tiles_col
+    for i, r in gpd_to_match.iterrows():
+        # get those that contains geom
+        flag_cont = gpd_tiles.geometry.contains(r["geometry"])
+        flag_int = gpd_tiles.geometry.intersects(r["geometry"])
+        if any(flag_cont):
+            # any contains
+            gpd_tf = gpd_tiles[flag_cont]
+            for it, rt in gpd_tf.iterrows():
+                gpd_ = gpd_to_match.iloc[[i]].copy()
+                gpd_["match_polygon"] = (
+                    rt["geometry"].intersection(r["geometry"]).to_wkt()
+                )
+                gpd_["match"] = "total"
+                gpd_[tile_name_out] = rt[gpd_tiles_col]
+                contains_.append(gpd_)
+        elif any(flag_int):
+            gpd_tf = gpd_tiles[flag_int]
+            for it, rt in gpd_tf.iterrows():
+                gpd_ = gpd_to_match.iloc[[i]].copy()
+                gpd_["match_polygon"] = (
+                    rt["geometry"].intersection(r["geometry"]).to_wkt()
+                )
+                gpd_["match"] = "partial"
+                gpd_[tile_name_out] = rt[gpd_tiles_col]
+                intersects_.append(gpd_)
+        else:
+            # switch to overlay
+            gpd_test = gpd_to_match.iloc[[i]].copy()
+            gpd_over = gpd.overlay(gpd_test, gpd_tiles)
+            for io, ro in gpd_over.iterrows():
+                gpd_tf = gpd_tiles[gpd_tiles[gpd_tiles_col] == ro[gpd_tiles_col]]
+                for it, rt in gpd_tf.iterrows():
+                    gpd_ = gpd_to_match.iloc[[i]]
+                    # by construction
+                    if rt["geometry"].contains(r["geometry"]):
+                        gpd_["match_polygon"] = (
+                            rt["geometry"].intersection(r["geometry"]).to_wkt()
+                        )
+                        gpd_["match"] = "total-overlay"
+                        gpd_[tile_name_out] = rt[gpd_tiles_col]
+                        contains_.append(gpd_)
+                    elif rt["geometry"].intersects(r["geometry"]):
+                        gpd_["match_polygon"] = (
+                            rt["geometry"].intersection(r["geometry"]).to_wkt()
+                        )
+                        gpd_["match"] = "partial-overlay"
+                        gpd_[tile_name_out] = rt[gpd_tiles_col]
+                        intersects_.append(gpd_)
+                    else:
+                        raise ("Could not make any match")
+    #
+    if len(contains_) and len(intersects_):
+        gpd_contains_, gpd_intersects_ = pd.concat(
+            contains_, ignore_index=True
+        ), pd.concat(intersects_, ignore_index=True)
+        gpd_contains_intersects_ = pd.concat(
+            [gpd_contains_, gpd_intersects_], ignore_index=True
+        )
+        return gpd_contains_intersects_
+    elif len(contains_) > 0:
+        gpd_contains_ = pd.concat(contains_, ignore_index=True)
+        return gpd_contains_
+    elif len(intersects_) > 0:
+        gpd_intersects_ = pd.concat(intersects_, ignore_index=True)
+        return gpd_intersects_
+    else:
+        return gpd.GeoDataFrame()
+
+
+def intersects(spacecraft, gpd_roi):
     """
     Returns the names and the geometries of the tiles that intersects a given
     Region of Interest (ROI).
     """
     selected_db = get_spacecraft_db(spacecraft)
-    matches = pygeos.predicates.intersects(selected_db["geometry"], roi)
-    return selected_db["tile"][matches], selected_db["geometry"][matches]
-
-def write_tiles_geoms(tiles,geoms=None,file_dump='./test.txt'):
-       
-    if geoms is None:
-        with open(file_dump,'w+') as f:
-            for t in tiles:
-                f.write('{} \n'.format(t))
+    if spacecraft == "sentinel2":
+        gpd_col = "TILE"
     else:
-        with open(file_dump,'w+') as f:
-            for t,g in zip(tiles,geoms):
-                f.write('{} , {}\n'.format(t,g))
+        gpd_col = "PATH#ROW"
+    # get roi
+    gpd_to_match = gpd_roi.copy()
+
+    return get_contains_intersect_on_tiles(gpd_to_match, selected_db, gpd_col)
 
 
-if __name__ == '__main__':
-    m,_=parser.parse_known_args()
-    box=pygeos.io.from_wkt(m.roi)
-    if m.op =='intersection':
-        tiles,geoms=intersects(m.spacecraft,box)
-    print(tiles)
+if __name__ == "__main__":
+    m, _ = parser.parse_known_args()
+    bbox = gpd.read_file(m.roi)
+    tiles_match = intersects(m.spacecraft, bbox)
+    if m.verbose:
+        if tiles_match.shape[0] > 0:
+            print(tiles_match)
+        else:
+            print("Could not find any intersection")
     if m.dump:
-        if len(tiles)>0:
-            if not m.dump_full:
-                write_tiles_geoms(tiles,None,m.dump_file)
-            else:
-                write_tiles_geoms(tiles,geoms,m.dump_file)
+        if tiles_match.shape[0] > 0:
+            tiles_match.to_file(m.dump_file, driver="GPKG")
