@@ -5,36 +5,27 @@ eo-tilematcher
 Tools to quickly find the Sentinel2, Landsat5, and Landsat8 tiles that a given region
 of interest.
 
-Basically the library returns:
-- __geometry__: is the requested geometry to be matched against satellite tiles
-- __match_polygon__: is the intersection/contains WKT geometry (string) that matches each satellite tile 
-- __match__: partial/total (str). total indicates a _contains_ conditition.
-- __TILE__ ( __PATH#ROW__): the satellite tile (path,row) matched in __match__ condition (Sentinel/Landsat convention)
+Basically the library returns a geodataframe with:
 
-Installation
-============
+* **geometry**: is the requested geometry to be matched against satellite tiles
 
-You can install the from PyPI by simply running::
+* **match_polygon**: is the intersection/contains WKT geometry (string) that matches each satellite tile 
 
-    pip install eo_tilematcher
+* **match**: partial/total (str). total indicates a *contains* conditition.
 
-
-Installation from sources
--------------------------
-
-To install the package, from the project root run::
-
-    pip install .  # Regular installation
-    pip install -e .  # Install in development mode
-
+* **TILE** ( **PATH#ROW**): the satellite tile (path,row) matched in **match** condition (Sentinel/Landsat convention)
 
 Usage
 =====
 
-Basic library usage::
+Basic library usage
 -------------------
 
+For this case, just import the library::
+
     from eo_tilematcher.eo_tilematcher import intersects
+and compute ::
+
     geo_match = intersects(spacecraft,ROI)
 
 Where
@@ -43,7 +34,7 @@ Where
 - spacecraft ={sentinel2,landsat8,landsat5}
 
 
-Check the `eo-tilematcher-101 <doc/./notebooks/eo-tilematcher-101.ipynb>` tutorial notebook to see some plots.
+Check the `eo-tilematcher-101 <./notebooks/eo-tilematcher-101.ipynb>`_ tutorial notebook to see some plots.
 
 Basic command line usage
 ------------------------
@@ -65,3 +56,19 @@ to current dir (as a geodataframe, "./geom_match.gpkg") ::
     python -m eo_tilematcher.eo_tilematcher /path/to/ROI --spacecraft spacecraft  --dump --dump_file /any/dir/file
     
 to dump geodataframe in /any/dir/file
+
+Installation
+============
+
+You can install the from PyPI by simply running::
+
+    pip install eo_tilematcher
+
+
+Installation from sources
+-------------------------
+
+To install the package, from the project root run::
+
+    pip install .  # Regular installation
+    pip install -e .  # Install in development mode
