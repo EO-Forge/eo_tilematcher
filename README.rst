@@ -31,36 +31,37 @@ To install the package, from the project root run::
 Usage
 =====
 
-Basic library usage
---------------------
+Basic library usage::
+-------------------
 
-    > from eo_tilematcher import intersects
-    > geo_match = intersects(spacecraft,ROI)
+    from eo_tilematcher.eo_tilematcher import intersects
+    geo_match = intersects(spacecraft,ROI)
 
 Where
+
 - ROI=geopandas geodataframe
 - spacecraft ={sentinel2,landsat8,landsat5}
 
 
-Check the [eo-tilematcher-101](./notebooks/eo-tilematcher-101.ipynb) tutorial notebook to see some plots.
+Check the `eo-tilematcher-101 <doc/./notebooks/eo-tilematcher-101.ipynb>` tutorial notebook to see some plots.
 
 Basic command line usage
 ------------------------
 
-Just tiles display no write to file:
+Just tiles display no write to file::
 
-    > python eo_tilematcher.py /path/to/ROI --spacecraft spacecraft 
+    python -m eo_tilematcher.eo_tilematcher /path/to/ROI --spacecraft spacecraft 
 
 Where:
 - /path/to/ROI is the path to any kind of file that fiona could open (shp,gpkg,geojson,...)
 - spacecraft ={sentinel2,landsat8,landsat5} (default sentinel2 no input required).
 
-With dump:
+With dump::
 
-    > python eo_tilematcher.py /path/to/ROI --spacecraft spacecraft  --dump 
+    python -m eo_tilematcher.eo_tilematcher /path/to/ROI --spacecraft spacecraft  --dump 
 
-to current dir (as a geodataframe, "./geom_match.gpkg")
+to current dir (as a geodataframe, "./geom_match.gpkg") ::
 
-    > python eo_tilematcher.py /path/to/ROI --spacecraft spacecraft  --dump --dump_file /any/dir/file
+    python -m eo_tilematcher.eo_tilematcher /path/to/ROI --spacecraft spacecraft  --dump --dump_file /any/dir/file
     
 to dump geodataframe in /any/dir/file
