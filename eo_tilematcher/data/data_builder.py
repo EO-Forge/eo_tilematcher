@@ -15,7 +15,9 @@ def build_sentinel2_db():
     )
     gpd_ = gpd.read_file(wrs_file)
     gpd_.columns = ["TILE", "geometry"]
-    gpd_.to_pickle(os.path.join(data_dir, "sentinel2/sentinel2_tiles.pkl"), protocol=-1)
+    gpd_.to_file(
+        os.path.join(data_dir, "sentinel2/sentinel2_tiles.shp"), driver="ESRI Shapefile"
+    )
     gpd_ = None
 
 
@@ -31,8 +33,8 @@ def build_lansat_db():
         + "#"
         + gpd_["ROW"].apply(lambda x: f"{x:003d}")
     )
-    gpd_[["PATH#ROW", "geometry"]].to_pickle(
-        os.path.join(data_dir, "landsat/landsat_tiles.pkl"), protocol=-1
+    gpd_[["PATH#ROW", "geometry"]].to_file(
+        os.path.join(data_dir, "landsat/landsat_tiles.shp"), driver="ESRI Shapefile"
     )
     gpd_ = None
 
