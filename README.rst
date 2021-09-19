@@ -13,7 +13,7 @@ Basically the library returns a geodataframe with:
 
 * **match**: partial/total (str). total indicates a *contains* conditition.
 
-* **TILE** ( **PATH#ROW**): the satellite tile (path,row) matched in **match** condition (Sentinel/Landsat convention)
+* **TILE** (Sentinel2) or **PATH#ROW** (Landsat): the satellite tile (path,row) matched in **match** condition (Sentinel/Landsat convention)
 
 Usage
 =====
@@ -23,7 +23,7 @@ Basic library usage
 
 For this case, just import the library::
 
-    from eo_tilematcher.eo_tilematcher import intersects
+    from eo_tilematcher import intersects
 and compute ::
 
     geo_match = intersects(spacecraft,ROI)
@@ -34,28 +34,33 @@ Where
 - spacecraft ={sentinel2,landsat8,landsat5}
 
 
-Check the `eo-tilematcher-101 <./notebooks/eo-tilematcher-101.ipynb>`_ tutorial notebook to see some plots.
+Check the `eo-tilematcher-101 <./examples/eo-tilematcher-101.ipynb>`_ tutorial notebook to see some plots.
 
 Basic command line usage
 ------------------------
 
-Just tiles display no write to file::
+1. Print the tiles intersecting a Region Of Interest (ROI) for a given satellite::
 
-    python -m eo_tilematcher.eo_tilematcher /path/to/ROI --spacecraft spacecraft 
+    python -m eo_tilematcher /path/to/ROI --spacecraft spacecraft
+
+or::
+
+    eo_tilematcher /path/to/ROI --spacecraft spacecraft
 
 Where:
 - /path/to/ROI is the path to any kind of file that fiona could open (shp,gpkg,geojson,...)
 - spacecraft ={sentinel2,landsat8,landsat5} (default sentinel2 no input required).
 
+2. Find, and save to a file, the tiles intersecting a Region Of Interest (ROI) for a given satellite
 With dump::
 
-    python -m eo_tilematcher.eo_tilematcher /path/to/ROI --spacecraft spacecraft  --dump 
+    python -m eo_tilematcher /path/to/ROI --spacecraft spacecraft  --output my_ouput.gpkg
 
-to current dir (as a geodataframe, "./geom_match.gpkg") ::
+or::
 
-    python -m eo_tilematcher.eo_tilematcher /path/to/ROI --spacecraft spacecraft  --dump --dump_file /any/dir/file
-    
-to dump geodataframe in /any/dir/file
+    eo_tilematcher /path/to/ROI --spacecraft spacecraft  --output my_ouput.gpkg
+
+
 
 Installation
 ============
