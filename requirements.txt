@@ -1,5 +1,6 @@
 geopandas
 matplotlib
+pygeos
 jupyterlab
 #
 black
