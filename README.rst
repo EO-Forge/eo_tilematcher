@@ -24,6 +24,7 @@ Basic library usage
 For this case, import the library::
 
     from eo_tilematcher import intersects
+
 and run::
 
     geo_match = intersects(spacecraft,ROI)
