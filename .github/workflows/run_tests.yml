@@ -38,4 +38,4 @@ jobs:
           pip install .
 
       - name: Run tests
-        run: pytest --0pyargs eo_tilematcher
+        run: pytest --pyargs eo_tilematcher
