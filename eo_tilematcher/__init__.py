@@ -69,6 +69,9 @@ def get_contains_intersect_on_tiles(gpd_to_match, gpd_tiles, gpd_tiles_col):
     contains_ = []
     intersects_ = []
     tile_name_out = gpd_tiles_col
+    # issue1 - reset index
+    gpd_to_match = gpd_to_match.reset_index(drop=True)
+
     for i, r in gpd_to_match.iterrows():
         # get those that contains geom
         flag_cont = gpd_tiles.geometry.contains(r["geometry"])
