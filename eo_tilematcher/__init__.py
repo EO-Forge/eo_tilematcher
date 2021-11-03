@@ -81,7 +81,7 @@ def get_contains_intersect_on_tiles(gpd_to_match, gpd_tiles, gpd_tiles_col):
             for it, rt in gpd_tf.iterrows():
                 gpd_ = gpd_to_match.iloc[[i]].copy()
                 gpd_["match_polygon"] = (
-                    rt["geometry"].intersection(r["geometry"]).to_wkt()
+                    rt["geometry"].intersection(r["geometry"]).wkt
                 )
                 gpd_["match"] = "total"
                 gpd_[tile_name_out] = rt[gpd_tiles_col]
@@ -91,7 +91,7 @@ def get_contains_intersect_on_tiles(gpd_to_match, gpd_tiles, gpd_tiles_col):
             for it, rt in gpd_tf.iterrows():
                 gpd_ = gpd_to_match.iloc[[i]].copy()
                 gpd_["match_polygon"] = (
-                    rt["geometry"].intersection(r["geometry"]).to_wkt()
+                    rt["geometry"].intersection(r["geometry"]).wkt
                 )
                 gpd_["match"] = "partial"
                 gpd_[tile_name_out] = rt[gpd_tiles_col]
@@ -107,14 +107,14 @@ def get_contains_intersect_on_tiles(gpd_to_match, gpd_tiles, gpd_tiles_col):
                     # by construction
                     if rt["geometry"].contains(r["geometry"]):
                         gpd_["match_polygon"] = (
-                            rt["geometry"].intersection(r["geometry"]).to_wkt()
+                            rt["geometry"].intersection(r["geometry"]).wkt
                         )
                         gpd_["match"] = "total-overlay"
                         gpd_[tile_name_out] = rt[gpd_tiles_col]
                         contains_.append(gpd_)
                     elif rt["geometry"].intersects(r["geometry"]):
                         gpd_["match_polygon"] = (
-                            rt["geometry"].intersection(r["geometry"]).to_wkt()
+                            rt["geometry"].intersection(r["geometry"]).wkt
                         )
                         gpd_["match"] = "partial-overlay"
                         gpd_[tile_name_out] = rt[gpd_tiles_col]
