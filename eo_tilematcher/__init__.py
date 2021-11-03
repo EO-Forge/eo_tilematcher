@@ -80,9 +80,7 @@ def get_contains_intersect_on_tiles(gpd_to_match, gpd_tiles, gpd_tiles_col):
             gpd_tf = gpd_tiles[flag_cont]
             for it, rt in gpd_tf.iterrows():
                 gpd_ = gpd_to_match.iloc[[i]].copy()
-                gpd_["match_polygon"] = (
-                    rt["geometry"].intersection(r["geometry"]).wkt
-                )
+                gpd_["match_polygon"] = rt["geometry"].intersection(r["geometry"]).wkt
                 gpd_["match"] = "total"
                 gpd_[tile_name_out] = rt[gpd_tiles_col]
                 contains_.append(gpd_)
@@ -90,9 +88,7 @@ def get_contains_intersect_on_tiles(gpd_to_match, gpd_tiles, gpd_tiles_col):
             gpd_tf = gpd_tiles[flag_int]
             for it, rt in gpd_tf.iterrows():
                 gpd_ = gpd_to_match.iloc[[i]].copy()
-                gpd_["match_polygon"] = (
-                    rt["geometry"].intersection(r["geometry"]).wkt
-                )
+                gpd_["match_polygon"] = rt["geometry"].intersection(r["geometry"]).wkt
                 gpd_["match"] = "partial"
                 gpd_[tile_name_out] = rt[gpd_tiles_col]
                 intersects_.append(gpd_)
